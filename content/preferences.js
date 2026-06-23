@@ -58,18 +58,24 @@
     ACL.setCustomNames(map); // also refreshes open readers
   };
 
-  const wireEnabled = () => {
-    const box = document.getElementById("acl-enabled");
+  // Wire a checkbox to a boolean pref, refreshing open readers on change.
+  // (Both "command" and "change" are bound so it works whether the input
+  // behaves as a XUL or an HTML control.)
+  const wireToggle = (id, pref, initial) => {
+    const box = document.getElementById(id);
     if (!box || !ACL) return;
-    box.checked = ACL.isEnabled();
-    box.addEventListener("command", () => {
-      Zotero.Prefs.set(ACL.PREF_ENABLED, box.checked);
+    box.checked = initial;
+    const onToggle = () => {
+      Zotero.Prefs.set(pref, box.checked);
       ACL.refreshAllReaders();
-    });
-    box.addEventListener("change", () => {
-      Zotero.Prefs.set(ACL.PREF_ENABLED, box.checked);
-      ACL.refreshAllReaders();
-    });
+    };
+    box.addEventListener("command", onToggle);
+    box.addEventListener("change", onToggle);
+  };
+
+  const wireToggles = () => {
+    wireToggle("acl-enabled", ACL.PREF_ENABLED, ACL.isEnabled());
+    wireToggle("acl-replace", ACL.PREF_REPLACE, ACL.shouldReplaceNames());
   };
 
   // The pane content may not be in the DOM the instant this script runs.
@@ -78,7 +84,7 @@
       setTimeout(start, 50);
       return;
     }
-    wireEnabled();
+    wireToggles();
     buildRows();
   };
   start();

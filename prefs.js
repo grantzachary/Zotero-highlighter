@@ -12,3 +12,8 @@ pref("extensions.zotero.annotation-colour-labels.names", "{}");
 // When false, the plugin leaves Zotero's native labels untouched (a quick
 // global off-switch the preferences pane can toggle).
 pref("extensions.zotero.annotation-colour-labels.enabled", true);
+
+// When true, the picker's visible colour name is replaced with the custom name
+// (e.g. "Yellow" → "Key finding"). When false, the colour name stays visible
+// and the custom name shows on hover only — friendlier for colour-blind users.
+pref("extensions.zotero.annotation-colour-labels.replaceNames", true);

@@ -20,9 +20,16 @@
       are never changed.
     </html:p>
 
-    <html:label style="display: inline-flex; gap: 0.5em; align-items: center; margin: 0.5em 0 1em;">
+    <html:label style="display: inline-flex; gap: 0.5em; align-items: center; margin: 0.5em 0 0.4em;">
       <html:input type="checkbox" id="acl-enabled" />
       <html:span>Show custom names in the reader</html:span>
+    </html:label>
+
+    <html:label style="display: inline-flex; gap: 0.5em; align-items: flex-start; margin: 0 0 1em;">
+      <html:input type="checkbox" id="acl-replace" style="margin-top: 0.2em;" />
+      <html:span>Replace the colour name in the picker<html:br />
+        <html:span style="opacity: 0.65; font-size: 0.9em;">When off, the colour name stays (e.g. "Yellow") and your name shows on hover — better if you're colour-blind.</html:span>
+      </html:span>
     </html:label>
 
     <!-- preferences.js fills this with one row per colour -->

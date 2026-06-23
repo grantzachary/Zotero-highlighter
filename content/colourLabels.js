@@ -73,10 +73,22 @@ Zotero.AnnotationColourLabels = {
    */
   PREF_NAMES: "annotation-colour-labels.names",
   PREF_ENABLED: "annotation-colour-labels.enabled",
+  PREF_REPLACE: "annotation-colour-labels.replaceNames",
 
   isEnabled() {
     try {
       return Zotero.Prefs.get(this.PREF_ENABLED) !== false;
+    } catch (e) {
+      return true;
+    }
+  },
+
+  /** When true, swap the picker's visible colour name for the custom one. When
+   * false, keep the native colour name visible and show the custom name on
+   * hover only (better for colour-blind users who rely on the colour word). */
+  shouldReplaceNames() {
+    try {
+      return Zotero.Prefs.get(this.PREF_REPLACE) !== false;
     } catch (e) {
       return true;
     }
@@ -262,9 +274,6 @@ Zotero.AnnotationColourLabels = {
     // The toolbar "Pick a Color" dropdown opener shows the *current* colour
     // (not a choice) and has its own functional tooltip — never relabel it.
     skipSelector: ".toolbar-dropdown-button",
-    // Where to write the custom label. Set both so the hover tooltip and the
-    // accessibility name match.
-    writeTargets: ["title", "aria-label"],
   },
 
   /** Find the swatch element a colour-source node belongs to, or null if it is
@@ -280,18 +289,52 @@ Zotero.AnnotationColourLabels = {
     return { target, hex };
   },
 
+  /** The text node that holds a swatch's visible colour name, e.g. the "Yellow"
+   * text node sitting right after the swatch's <div class="icon">. Null if the
+   * swatch has no visible text label (icon-only pickers). */
+  _labelNode(button) {
+    for (const n of button.childNodes) {
+      if (n.nodeType === 3 && n.nodeValue && n.nodeValue.trim()) return n;
+    }
+    return null;
+  },
+
   applyLabels(doc) {
     if (!this.isEnabled()) return;
     try {
       const c = this.CONFIG;
+      const custom = this.getCustomNames();
+      const replace = this.shouldReplaceNames();
       for (const src of doc.querySelectorAll(c.colorSourceSelector)) {
         const hit = this._swatchFor(src);
         if (!hit) continue;
-        const label = this.labelFor(hit.hex);
-        if (!label) continue;
-        for (const attr of c.writeTargets) {
-          // Skip no-op writes so we don't generate pointless mutations.
-          if (hit.target.getAttribute(attr) !== label) hit.target.setAttribute(attr, label);
+        const { target } = hit;
+        const name = custom[hit.hex]; // only colours the user actually renamed
+        const labelNode = this._labelNode(target);
+
+        // Hover tooltip: the custom name, or restore native (no tooltip) if the
+        // colour isn't renamed.
+        if (name) {
+          if (target.getAttribute("title") !== name) target.setAttribute("title", name);
+        } else if (target.hasAttribute("title")) {
+          target.removeAttribute("title");
+        }
+
+        // Visible name in the picker row. Replace it only when the user opted in
+        // AND has set a custom name; otherwise leave (or restore) the native
+        // colour name so the accessible/visible label stays correct.
+        if (labelNode) {
+          if (replace && name) {
+            if (target.dataset && target.dataset.aclOrig == null) {
+              target.dataset.aclOrig = labelNode.nodeValue;
+            }
+            if (labelNode.nodeValue !== name) labelNode.nodeValue = name;
+          } else if (target.dataset && target.dataset.aclOrig != null) {
+            if (labelNode.nodeValue !== target.dataset.aclOrig) {
+              labelNode.nodeValue = target.dataset.aclOrig;
+            }
+            delete target.dataset.aclOrig;
+          }
         }
       }
     } catch (e) {
@@ -299,7 +342,7 @@ Zotero.AnnotationColourLabels = {
     }
   },
 
-  /** Strip the labels we added, restoring the reader's native state. Used when
+  /** Strip everything we added, restoring the reader's native state. Used when
    * the plugin is disabled or shut down so it leaves no residue. */
   removeLabels(doc) {
     try {
@@ -307,7 +350,14 @@ Zotero.AnnotationColourLabels = {
       for (const src of doc.querySelectorAll(c.colorSourceSelector)) {
         const hit = this._swatchFor(src);
         if (!hit) continue;
-        for (const attr of c.writeTargets) hit.target.removeAttribute(attr);
+        const { target } = hit;
+        target.removeAttribute("title");
+        target.removeAttribute("aria-label");
+        const labelNode = this._labelNode(target);
+        if (labelNode && target.dataset && target.dataset.aclOrig != null) {
+          labelNode.nodeValue = target.dataset.aclOrig;
+          delete target.dataset.aclOrig;
+        }
       }
     } catch (e) {
       this.log("removeLabels error: " + e);
