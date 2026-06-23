@@ -78,6 +78,7 @@
     wireToggle("acl-replace", ACL.PREF_REPLACE, ACL.shouldReplaceNames());
     wireToggle("acl-surface-picker", ACL.PREF_SURFACE_PICKER, ACL._surfaceOn(ACL.PREF_SURFACE_PICKER));
     wireToggle("acl-surface-sidebar", ACL.PREF_SURFACE_SIDEBAR, ACL._surfaceOn(ACL.PREF_SURFACE_SIDEBAR));
+    wireToggle("acl-surface-library", ACL.PREF_SURFACE_LIBRARY, ACL._surfaceOn(ACL.PREF_SURFACE_LIBRARY));
   };
 
   // The pane content may not be in the DOM the instant this script runs.

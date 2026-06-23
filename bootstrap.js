@@ -70,7 +70,11 @@ function shutdown() {
 
 function uninstall() {}
 
-// Main-window hooks — not needed for this plugin (all UI lives in the reader),
-// but kept as no-ops so the lifecycle contract is complete and obvious.
-function onMainWindowLoad({ window }) {}
+// Main-window hooks. The library item pane (annotation rows) lives here, so
+// (re)attach when a main window loads.
+function onMainWindowLoad({ window }) {
+  try {
+    if (Zotero.AnnotationColourLabels) Zotero.AnnotationColourLabels.attachToMainWindow();
+  } catch (e) {}
+}
 function onMainWindowUnload({ window }) {}

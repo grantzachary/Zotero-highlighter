@@ -21,3 +21,4 @@ pref("extensions.zotero.annotation-colour-labels.replaceNames", true);
 // "Apply in:" surface toggles — which parts of the UI get the custom names.
 pref("extensions.zotero.annotation-colour-labels.surfacePicker", true);
 pref("extensions.zotero.annotation-colour-labels.surfaceSidebar", true);
+pref("extensions.zotero.annotation-colour-labels.surfaceLibrary", true);
