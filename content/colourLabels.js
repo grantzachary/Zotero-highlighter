@@ -171,8 +171,20 @@ Zotero.AnnotationColourLabels = {
    * Confirmed working on Zotero 9.0.4.
    */
   attachToReader(reader) {
-    if (!this.isEnabled()) return;
-    this._observe(this._readerDocument(reader));
+    if (!this.isEnabled() || !reader) return;
+    const doc = this._readerDocument(reader);
+    if (doc) {
+      this._observe(doc);
+      return;
+    }
+    // The reader iframe often isn't ready the instant its tab opens (or at
+    // startup with restored tabs). Retry until the document exists, then attach,
+    // so the observer is never silently skipped due to a timing race.
+    const tries = reader._aclAttachTries || 0;
+    if (tries >= 40) return; // ~10s cap, then give up
+    reader._aclAttachTries = tries + 1;
+    const win = this._mainWindowDoc() && this._mainWindowDoc().defaultView;
+    if (win && win.setTimeout) win.setTimeout(() => this.attachToReader(reader), 250);
   },
 
   /** Hook the main Zotero window so the item pane's annotation rows get the
