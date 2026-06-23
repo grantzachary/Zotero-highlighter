@@ -7,10 +7,10 @@ The names show when you hover a colour while annotating.
 It is **display-only**: it never changes your annotations, your library, or any
 stored data. It only relabels what you see.
 
-> **Status: early scaffold (v0.1.0).** The plugin structure, preferences pane,
-> and storage are in place. The one remaining piece — hooking the reader's
-> colour UI on Zotero 8/9 — is wired up and ready to be finalised. See
-> [`CLAUDE.md`](./CLAUDE.md) for the exact step to complete it.
+> **Status: working (v0.1.0).** Verified end-to-end on Zotero **9.0.4** —
+> the Settings pane lists all eight colours, custom names save, and they
+> appear as hover tooltips on the reader's colour swatches (relabelled live
+> via a MutationObserver, display-only). Confirm on 7/8 before a wide release.
 
 Why this exists: relabelling highlight colours has been one of the most-
 requested Zotero features for years, and the older community plugins broke when

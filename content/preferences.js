@@ -3,9 +3,10 @@
  * the Settings window. `Zotero` is the app singleton and is available here, so
  * we reuse Zotero.AnnotationColourLabels rather than duplicating state.
  *
- * ⚠️ VERIFY: confirm `Zotero.AnnotationColourLabels` is reachable from the
- *    prefs window on 8/9. If scoping ever isolates it, load colourLabels.js
- *    here too (add it to the `scripts` array in bootstrap.js).
+ * Confirmed on Zotero 9.0.4: `Zotero.AnnotationColourLabels` is reachable from
+ * the prefs window (the pane renders all eight colour rows and live-refreshes
+ * open readers). If a future version ever isolates it, load colourLabels.js
+ * here too (add it to the `scripts` array in bootstrap.js).
  */
 
 {

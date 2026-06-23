@@ -39,8 +39,8 @@ async function startup({ id, version, rootURI }) {
   // Attach to any readers already open.
   ACL.attachToAllWindows();
 
-  // Pick up readers opened later. Tab events fire when a PDF/EPUB tab opens.
-  // ⚠️ VERIFY the notifier type: 'tab' has historically covered reader tabs.
+  // Pick up readers opened later. Confirmed on Zotero 9.0.4: 'tab' add/select
+  // events fire when a PDF/EPUB reader tab opens.
   try {
     notifierID = Zotero.Notifier.registerObserver(
       {

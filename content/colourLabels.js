@@ -28,11 +28,9 @@ Zotero.AnnotationColourLabels = {
    * Zotero ships a fixed palette of annotation colours. The first five are the
    * long-standing ones; orange / magenta / grey were added in 6.0.22.
    *
-   * ⚠️ VERIFY the exact hex set against the running client. Prefer reading
-   *    Zotero's own list at runtime if you can confirm the API (it is likely
-   *    exposed on Zotero.Annotations — check `Zotero.Annotations` in the
-   *    Run JavaScript window). The table below is a safe fallback and is what
-   *    the preferences pane renders.
+   * Confirmed on Zotero 9.0.4: all eight hexes below match the reader's own
+   * picker swatches exactly (verified by reading each swatch's SVG fill in a
+   * live reader). This table is also what the preferences pane renders.
    */
   COLORS: [
     { hex: "#ffd400", name: "Yellow" },
@@ -132,9 +130,7 @@ Zotero.AnnotationColourLabels = {
    */
   attachToAllWindows() {
     try {
-      // ⚠️ VERIFY: Zotero.Reader exposes open reader instances. The internal
-      //    array has historically been Zotero.Reader._readers. Confirm and,
-      //    if a public iterator exists in 8/9, prefer that.
+      // Confirmed on Zotero 9.0.4: open readers live in Zotero.Reader._readers.
       const readers = (Zotero.Reader && Zotero.Reader._readers) || [];
       for (const reader of readers) this.attachToReader(reader);
     } catch (e) {
@@ -145,9 +141,7 @@ Zotero.AnnotationColourLabels = {
   /**
    * Hook a single reader instance. We relabel once now, then keep the labels
    * correct as the reader rebuilds its toolbars/menus via a MutationObserver.
-   *
-   * ⚠️ This is the part to verify. See debugDumpReaderColorElements() and
-   *    CLAUDE.md for the procedure to confirm `doc` and the CONFIG selectors.
+   * Confirmed working on Zotero 9.0.4.
    */
   attachToReader(reader) {
     if (!this.isEnabled()) return;
@@ -222,17 +216,16 @@ Zotero.AnnotationColourLabels = {
 
   /**
    * Resolve the DOM document that holds the reader's colour UI.
-   * ⚠️ VERIFY: the reader renders inside an iframe. The internal handle has
-   *    historically been reader._iframeWindow / reader._internalReader. Use
-   *    debugDumpReaderColorElements() to confirm where the swatches live.
+   * Confirmed on Zotero 9.0.4: the colour toolbar/picker live in
+   * reader._iframeWindow.document (resource://zotero/reader/reader.html).
    */
   _readerDocument(reader) {
     if (!reader) return null;
     // The reader UI lives in an iframe; the handle has shifted across versions,
     // so try the known candidates and take the first that yields a usable
-    // document. The colour toolbar/menu live in this primary reader document
-    // (the nested PDF-view iframe is a separate document we don't need here).
-    // ⚠️ Confirm the winning handle on 8/9 via debugDumpReaderColorElements().
+    // document. _iframeWindow.document wins on Zotero 9; the others are
+    // fallbacks for older/newer builds. (The nested PDF-view iframe is a
+    // separate document we don't need here.)
     const candidates = [
       () => reader._iframeWindow && reader._iframeWindow.document,
       () => reader._iframe && reader._iframe.contentDocument,
@@ -251,8 +244,8 @@ Zotero.AnnotationColourLabels = {
 
   /* ----- The actual relabel ----------------------------------------------
    * CONFIG: every selector the relabel depends on lives here so it can be
-   * fixed in one place once confirmed against the live reader.
-   * ⚠️ THESE ARE EDUCATED GUESSES — verify and replace.
+   * adjusted in one place if a future Zotero reader changes its markup.
+   * Confirmed against Zotero 9.0.4 (see CONFIG comment below).
    */
   CONFIG: {
     // Confirmed against the Zotero 9 reader (resource://zotero/reader/reader.html)
