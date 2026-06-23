@@ -76,6 +76,8 @@
   const wireToggles = () => {
     wireToggle("acl-enabled", ACL.PREF_ENABLED, ACL.isEnabled());
     wireToggle("acl-replace", ACL.PREF_REPLACE, ACL.shouldReplaceNames());
+    wireToggle("acl-surface-picker", ACL.PREF_SURFACE_PICKER, ACL._surfaceOn(ACL.PREF_SURFACE_PICKER));
+    wireToggle("acl-surface-sidebar", ACL.PREF_SURFACE_SIDEBAR, ACL._surfaceOn(ACL.PREF_SURFACE_SIDEBAR));
   };
 
   // The pane content may not be in the DOM the instant this script runs.

@@ -74,6 +74,18 @@ Zotero.AnnotationColourLabels = {
   PREF_NAMES: "annotation-colour-labels.names",
   PREF_ENABLED: "annotation-colour-labels.enabled",
   PREF_REPLACE: "annotation-colour-labels.replaceNames",
+  // Per-surface "Apply in:" toggles (all default on).
+  PREF_SURFACE_PICKER: "annotation-colour-labels.surfacePicker",
+  PREF_SURFACE_SIDEBAR: "annotation-colour-labels.surfaceSidebar",
+
+  /** A surface toggle defaults to on unless explicitly set false. */
+  _surfaceOn(pref) {
+    try {
+      return Zotero.Prefs.get(pref) !== false;
+    } catch (e) {
+      return true;
+    }
+  },
 
   isEnabled() {
     try {
@@ -301,11 +313,30 @@ Zotero.AnnotationColourLabels = {
 
   applyLabels(doc) {
     if (!this.isEnabled()) return;
+    const custom = this.getCustomNames();
+    // Each surface is independently toggleable. When a surface is off we
+    // actively undo it (not just skip), so turning it off clears stale labels.
+    if (this._surfaceOn(this.PREF_SURFACE_PICKER)) this._applyPicker(doc, custom);
+    else this._removePicker(doc);
+    if (this._surfaceOn(this.PREF_SURFACE_SIDEBAR)) this._applySidebar(doc, custom);
+    else this._removeSidebar(doc);
+  },
+
+  /** Strip everything we added across all surfaces, restoring native state.
+   * Used on disable/shutdown so nothing is left behind. */
+  removeLabels(doc) {
+    this._removePicker(doc);
+    this._removeSidebar(doc);
+  },
+
+  /* ----- Surface: the reader colour picker --------------------------------
+   * Covers the toolbar dropdown, the text-selection popup, the right-click
+   * "change colour" menu, and the colour choices in an annotation popup — all
+   * the same <button> swatches. */
+  _applyPicker(doc, custom) {
     try {
-      const c = this.CONFIG;
-      const custom = this.getCustomNames();
       const replace = this.shouldReplaceNames();
-      for (const src of doc.querySelectorAll(c.colorSourceSelector)) {
+      for (const src of doc.querySelectorAll(this.CONFIG.colorSourceSelector)) {
         const hit = this._swatchFor(src);
         if (!hit) continue;
         const { target } = hit;
@@ -338,16 +369,13 @@ Zotero.AnnotationColourLabels = {
         }
       }
     } catch (e) {
-      this.log("applyLabels error: " + e);
+      this.log("_applyPicker error: " + e);
     }
   },
 
-  /** Strip everything we added, restoring the reader's native state. Used when
-   * the plugin is disabled or shut down so it leaves no residue. */
-  removeLabels(doc) {
+  _removePicker(doc) {
     try {
-      const c = this.CONFIG;
-      for (const src of doc.querySelectorAll(c.colorSourceSelector)) {
+      for (const src of doc.querySelectorAll(this.CONFIG.colorSourceSelector)) {
         const hit = this._swatchFor(src);
         if (!hit) continue;
         const { target } = hit;
@@ -360,8 +388,57 @@ Zotero.AnnotationColourLabels = {
         }
       }
     } catch (e) {
-      this.log("removeLabels error: " + e);
+      this.log("_removePicker error: " + e);
     }
+  },
+
+  /* ----- Surface: the annotation sidebar list -----------------------------
+   * Confirmed on Zotero 9.0.4: each card is
+   *   div.annotation[data-sidebar-annotation-id]
+   * and its colour is an inline `color` on a `.icon` element (the SVG uses
+   * currentColor). There is no worded name, so we add the custom name as a
+   * hover tooltip on that icon, marked with data-acl-tip for clean removal. */
+  _applySidebar(doc, custom) {
+    try {
+      for (const el of this._sidebarColorIcons(doc)) {
+        const hex = this._normaliseColor(el.style && el.style.color);
+        const name = hex && custom[hex];
+        if (name) {
+          if (el.getAttribute("title") !== name) el.setAttribute("title", name);
+          if (el.dataset) el.dataset.aclTip = "1";
+        } else if (el.dataset && el.dataset.aclTip != null) {
+          el.removeAttribute("title");
+          delete el.dataset.aclTip;
+        }
+      }
+    } catch (e) {
+      this.log("_applySidebar error: " + e);
+    }
+  },
+
+  _removeSidebar(doc) {
+    try {
+      for (const el of this._sidebarColorIcons(doc)) {
+        if (el.dataset && el.dataset.aclTip != null) {
+          el.removeAttribute("title");
+          delete el.dataset.aclTip;
+        }
+      }
+    } catch (e) {
+      this.log("_removeSidebar error: " + e);
+    }
+  },
+
+  /** Colour-bearing icons inside annotation sidebar cards. */
+  _sidebarColorIcons(doc) {
+    const out = [];
+    for (const card of doc.querySelectorAll(".annotation[data-sidebar-annotation-id]")) {
+      for (const el of card.querySelectorAll("[style*='color']")) {
+        const hex = this._normaliseColor(el.style && el.style.color);
+        if (hex && this._isKnownColor(hex)) out.push(el);
+      }
+    }
+    return out;
   },
 
   /** Turn "rgb(255, 212, 0)" or "#FFD400" into a canonical "#ffd400". */
