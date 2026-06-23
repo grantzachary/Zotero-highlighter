@@ -18,15 +18,23 @@ async function startup({ id, version, rootURI }) {
   ACL = Zotero.AnnotationColourLabels;
   ACL.init({ id, version, rootURI });
 
-  // Register the preferences pane (Zotero 7+ API).
-  // ⚠️ VERIFY this still registers cleanly on 8/9 (prefs-pane API is expected
-  //    to be stable, but confirm the pane appears under Settings).
-  Zotero.PreferencePanes.register({
-    pluginID: id,
-    src: rootURI + "content/preferences.xhtml",
-    scripts: [rootURI + "content/preferences.js"],
-    label: "Colour Labels",
-  });
+  // Register the preferences pane (Zotero 7+ API). Guard it — both a synchronous
+  // throw and a rejected promise — so a prefs-pane problem can never prevent the
+  // reader relabel below from attaching.
+  try {
+    Promise.resolve(
+      Zotero.PreferencePanes.register({
+        pluginID: id,
+        src: rootURI + "content/preferences.xhtml",
+        scripts: [rootURI + "content/preferences.js"],
+        label: "Colour Labels",
+      })
+    ).catch((e) =>
+      Zotero.debug("[Annotation Colour Labels] prefs pane registration rejected: " + e)
+    );
+  } catch (e) {
+    Zotero.debug("[Annotation Colour Labels] prefs pane registration threw: " + e);
+  }
 
   // Attach to any readers already open.
   ACL.attachToAllWindows();
