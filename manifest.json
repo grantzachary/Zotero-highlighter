@@ -8,7 +8,7 @@
   "applications": {
     "zotero": {
       "id": "annotation-colour-labels@grantzachary.github.io",
-      "update_url": "https://github.com/grantzachary/Zotero-highlighter/releases/download/release/updates.json",
+      "update_url": "https://raw.githubusercontent.com/grantzachary/Zotero-highlighter/main/updates.json",
       "strict_min_version": "7.0",
       "strict_max_version": "9.0.*"
     }

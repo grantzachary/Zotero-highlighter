@@ -59,18 +59,30 @@ e.g. `Zotero.AnnotationColourLabels.debugDumpReaderColorElements()`.
 The `.xpi` is just a zip of this folder with `manifest.json` at the root:
 
 ```bash
-cd zotero-annotation-colour-labels
-zip -r -FS ../annotation-colour-labels.xpi . -x '.git/*' '.github/*' 'CLAUDE.md'
+# from the project root (the folder containing manifest.json)
+zip -r -FS annotation-colour-labels.xpi . \
+  -x '.git/*' '.github/*' 'CLAUDE.md' 'updates.json' '*.zip' '*.xpi' '.DS_Store'
 ```
 
-## Before you publish
+## Distribution & auto-updates
 
-Replace the placeholders in `manifest.json`:
+The manifest's `update_url` points at [`updates.json`](./updates.json) (served
+raw from `main`). Zotero polls it and offers in-app updates. Each version's
+`.xpi` is attached to a GitHub **Release** tagged `vX.Y.Z`, which `updates.json`
+links to.
 
-- `YOUR NAME` → your name
-- `YOUR_USERNAME` → your GitHub username
-- `YOUR_DOMAIN` → any stable id suffix you control (e.g. your GitHub handle);
-  the id just has to be unique and never change once released.
+### Releasing a new version
+
+1. Bump `version` in **both** `manifest.json` and `updates.json` (keep them in
+   sync), and set `updates.json`'s `update_link` to the new tag's `.xpi`.
+2. Rebuild the `.xpi` (above).
+3. Create a GitHub Release tagged `vX.Y.Z` and upload the `.xpi` as an asset
+   named `annotation-colour-labels.xpi` (so the `update_link` resolves).
+4. Commit & push `manifest.json` + `updates.json`. Installed copies pick up the
+   update on Zotero's next check.
+
+The plugin **id** (`annotation-colour-labels@grantzachary.github.io`) is
+permanent — never change it once released, or auto-updates break.
 
 ## Licence
 
