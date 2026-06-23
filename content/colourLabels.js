@@ -184,12 +184,19 @@ Zotero.AnnotationColourLabels = {
 
   detachFromAllReaders() {
     // WeakMap isn't iterable; rely on readers closing to GC their observers,
-    // but disconnect any we can still reach.
+    // but disconnect any we can still reach — and strip the labels we added so
+    // disable/uninstall leaves the reader exactly as we found it.
     try {
       const readers = (Zotero.Reader && Zotero.Reader._readers) || [];
       for (const reader of readers) {
         const doc = this._readerDocument(reader);
-        const obs = doc && this._observers.get(doc);
+        if (!doc) continue;
+        try {
+          this.removeLabels(doc);
+        } catch (e) {
+          /* best effort */
+        }
+        const obs = this._observers.get(doc);
         if (obs) {
           obs.disconnect();
           this._observers.delete(doc);
@@ -201,10 +208,15 @@ Zotero.AnnotationColourLabels = {
   },
 
   refreshAllReaders() {
+    const enabled = this.isEnabled();
     const readers = (Zotero.Reader && Zotero.Reader._readers) || [];
     for (const reader of readers) {
       const doc = this._readerDocument(reader);
-      if (doc) this.applyLabels(doc);
+      if (!doc) continue;
+      // When toggled off, actively strip existing labels rather than just
+      // ceasing to add them — otherwise stale tooltips linger until re-render.
+      if (enabled) this.applyLabels(doc);
+      else this.removeLabels(doc);
     }
   },
 
@@ -243,59 +255,50 @@ Zotero.AnnotationColourLabels = {
    * ⚠️ THESE ARE EDUCATED GUESSES — verify and replace.
    */
   CONFIG: {
-    // Elements that represent a single colour choice. The reader builds its
-    // colour picker (annotating toolbar popup AND the right-click "change
-    // colour" menu) as a row of <button> swatches, each with the colour name
-    // in `title` and an inner element/icon carrying the colour. We match
-    // broadly; the per-node colour read + known-palette guard below keep us
-    // from touching any non-colour button this happens to catch.
-    // ⚠️ Confirm against a live reader via debugDumpReaderColorElements().
-    swatchSelectors: [
-      "[data-color]",
-      ".color-picker button",
-      ".colors button",
-      "button.toolbar-button[title]",
-      "[role='option'][title]",
-    ],
-    // How to read a swatch's colour, tried in order. STRUCTURAL sources only —
-    // never the label we overwrite — so relabelling stays idempotent.
-    colorReaders: [
-      (el) => el.getAttribute && el.getAttribute("data-color"),
-      (el) => {
-        const filled = el.querySelector && el.querySelector("[fill]");
-        return filled && filled.getAttribute("fill");
-      },
-      (el) => {
-        const inner = el.querySelector && el.querySelector("*");
-        return inner && inner.style && inner.style.backgroundColor;
-      },
-      (el) => el.style && el.style.backgroundColor,
-    ],
+    // Confirmed against the Zotero 9 reader (resource://zotero/reader/reader.html)
+    // via debugDumpReaderColorElements(). A colour swatch is a <button> whose
+    // colour lives in a descendant SVG node's `fill` attribute, e.g.
+    //   button.row.basic > div.icon > svg > path[fill="#ffd400"]
+    // The button carries no native title/aria, so we add the hover tooltip
+    // there. Right-click / menu pickers may instead use data-color — handled.
+    //
+    // We find colour *sources* (anything carrying a known palette colour), then
+    // walk up to the swatch element the user actually hovers/clicks.
+    colorSourceSelector: "[fill], [data-color]",
+    swatchSelector: "button, [role='option'], [role='menuitem'], [data-color]",
+    // The toolbar "Pick a Color" dropdown opener shows the *current* colour
+    // (not a choice) and has its own functional tooltip — never relabel it.
+    skipSelector: ".toolbar-dropdown-button",
     // Where to write the custom label. Set both so the hover tooltip and the
     // accessibility name match.
     writeTargets: ["title", "aria-label"],
   },
 
+  /** Find the swatch element a colour-source node belongs to, or null if it is
+   * not a colour swatch we should touch. */
+  _swatchFor(src) {
+    const c = this.CONFIG;
+    const hex = this._normaliseColor(
+      (src.getAttribute && (src.getAttribute("data-color") || src.getAttribute("fill"))) || ""
+    );
+    if (!hex || !this._isKnownColor(hex)) return null;
+    const target = (src.closest && src.closest(c.swatchSelector)) || src;
+    if (c.skipSelector && target.closest && target.closest(c.skipSelector)) return null;
+    return { target, hex };
+  },
+
   applyLabels(doc) {
     if (!this.isEnabled()) return;
     try {
-      const selector = this.CONFIG.swatchSelectors.join(", ");
-      const nodes = doc.querySelectorAll(selector);
-      for (const el of nodes) {
-        // Resolve the swatch's colour once and cache it on the node. Later
-        // observer passes read the cache, so overwriting the visible label can
-        // never change which colour the swatch maps to.
-        let hex = el.dataset ? el.dataset.aclHex : null;
-        if (!hex) {
-          hex = this._normaliseColor(this._readColor(el));
-          if (hex && el.dataset) el.dataset.aclHex = hex;
-        }
-        if (!hex || !this._isKnownColor(hex)) continue;
-        const label = this.labelFor(hex);
+      const c = this.CONFIG;
+      for (const src of doc.querySelectorAll(c.colorSourceSelector)) {
+        const hit = this._swatchFor(src);
+        if (!hit) continue;
+        const label = this.labelFor(hit.hex);
         if (!label) continue;
-        for (const attr of this.CONFIG.writeTargets) {
+        for (const attr of c.writeTargets) {
           // Skip no-op writes so we don't generate pointless mutations.
-          if (el.getAttribute(attr) !== label) el.setAttribute(attr, label);
+          if (hit.target.getAttribute(attr) !== label) hit.target.setAttribute(attr, label);
         }
       }
     } catch (e) {
@@ -303,16 +306,19 @@ Zotero.AnnotationColourLabels = {
     }
   },
 
-  _readColor(el) {
-    for (const fn of this.CONFIG.colorReaders) {
-      try {
-        const v = fn(el);
-        if (v) return v;
-      } catch (e) {
-        /* try next */
+  /** Strip the labels we added, restoring the reader's native state. Used when
+   * the plugin is disabled or shut down so it leaves no residue. */
+  removeLabels(doc) {
+    try {
+      const c = this.CONFIG;
+      for (const src of doc.querySelectorAll(c.colorSourceSelector)) {
+        const hit = this._swatchFor(src);
+        if (!hit) continue;
+        for (const attr of c.writeTargets) hit.target.removeAttribute(attr);
       }
+    } catch (e) {
+      this.log("removeLabels error: " + e);
     }
-    return null;
   },
 
   /** Turn "rgb(255, 212, 0)" or "#FFD400" into a canonical "#ffd400". */
