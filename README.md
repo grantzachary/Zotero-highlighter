@@ -7,10 +7,16 @@ The names show when you hover a colour while annotating.
 It is **display-only**: it never changes your annotations, your library, or any
 stored data. It only relabels what you see.
 
-> **Status: early scaffold (v0.1.0).** The plugin structure, preferences pane,
-> and storage are in place. The one remaining piece — hooking the reader's
-> colour UI on Zotero 8/9 — is wired up and ready to be finalised. See
-> [`CLAUDE.md`](./CLAUDE.md) for the exact step to complete it.
+## ⬇️ Download
+
+**[Download the latest `.xpi`](https://github.com/grantzachary/Zotero-highlighter/releases/latest/download/annotation-colour-labels.xpi)**
+— then in Zotero: **Tools → Plugins → ⚙ → Install Plugin From File**, pick the
+`.xpi`, and configure under **Settings → Colour Labels**.
+
+> **Status: working (v0.1.0).** Verified end-to-end on Zotero **9.0.4** — the
+> Settings pane lists all eight colours, custom names save, and they appear in
+> the reader's colour picker, the annotation sidebar, and the library item pane
+> (display-only — your annotations and data are never changed).
 
 Why this exists: relabelling highlight colours has been one of the most-
 requested Zotero features for years, and the older community plugins broke when
@@ -61,7 +67,7 @@ The `.xpi` is just a zip of this folder with `manifest.json` at the root:
 ```bash
 # from the project root (the folder containing manifest.json)
 zip -r -FS annotation-colour-labels.xpi . \
-  -x '.git/*' '.github/*' 'CLAUDE.md' 'updates.json' '*.zip' '*.xpi' '.DS_Store'
+  -x '.git/*' '.github/*' 'updates.json' '*.zip' '*.xpi' '.DS_Store'
 ```
 
 ## Distribution & auto-updates
