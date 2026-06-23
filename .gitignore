@@ -1,0 +1,19 @@
+# Build output
+*.xpi
+
+# Personal working brief — kept private, not part of the published plugin
+CLAUDE.md
+
+# Snapshot bundle (kept out of git; regenerated on release)
+zotero-annotation-colour-labels.zip
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Node (only if a build is added later)
+node_modules/
+build/

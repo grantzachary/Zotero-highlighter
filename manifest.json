@@ -1,0 +1,16 @@
+{
+  "manifest_version": 2,
+  "name": "Annotation Colour Labels",
+  "version": "0.1.0",
+  "description": "Rename the highlight colours in the Zotero reader (e.g. Yellow → Key finding, Blue → Method). Display-only: it never alters your annotations or data.",
+  "author": "Grant Freeman",
+  "homepage_url": "https://github.com/grantzachary/Zotero-highlighter",
+  "applications": {
+    "zotero": {
+      "id": "annotation-colour-labels@grantzachary.github.io",
+      "update_url": "https://github.com/grantzachary/Zotero-highlighter/releases/download/release/updates.json",
+      "strict_min_version": "7.0",
+      "strict_max_version": "9.0.*"
+    }
+  }
+}

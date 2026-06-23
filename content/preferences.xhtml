@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Preferences pane for Annotation Colour Labels.
+  Zotero injects this into the Settings window. preferences.js builds the
+  per-colour rows from Zotero.AnnotationColourLabels.COLORS and wires the
+  inputs to the stored preferences.
+
+  ⚠️ VERIFY rendering on Zotero 8/9. The prefs-pane API is expected to be
+     stable, but confirm the pane appears and the rows populate.
+-->
+<vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:html="http://www.w3.org/1999/xhtml">
+
+  <html:div style="padding: 1em; max-width: 40em;">
+    <html:h2 style="margin-top: 0;">Annotation Colour Labels</html:h2>
+    <html:p style="opacity: 0.8;">
+      Give each highlight colour a meaningful name. Names appear in the reader
+      when you hover a colour. This is display-only — your annotations and data
+      are never changed.
+    </html:p>
+
+    <html:label style="display: inline-flex; gap: 0.5em; align-items: center; margin: 0.5em 0 1em;">
+      <html:input type="checkbox" id="acl-enabled" />
+      <html:span>Show custom names in the reader</html:span>
+    </html:label>
+
+    <!-- preferences.js fills this with one row per colour -->
+    <html:div id="acl-rows"></html:div>
+
+    <html:p style="opacity: 0.65; font-size: 0.9em; margin-top: 1em;">
+      Tip: leave a field blank to keep Zotero's default name for that colour.
+    </html:p>
+  </html:div>
+
+</vbox>
