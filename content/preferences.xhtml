@@ -1,16 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!--
-  Preferences pane for Annotation Colour Labels.
-  Zotero injects this into the Settings window. preferences.js builds the
-  per-colour rows from Zotero.AnnotationColourLabels.COLORS and wires the
-  inputs to the stored preferences.
-
-  ⚠️ VERIFY rendering on Zotero 8/9. The prefs-pane API is expected to be
-     stable, but confirm the pane appears and the rows populate.
--->
 <vbox xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:html="http://www.w3.org/1999/xhtml">
 
+  <!--
+    Preferences pane for Annotation Colour Labels.
+    NB: no <?xml?> prolog and no comment before the root element — Zotero wraps
+    this markup when loading the pane, and a leading XML declaration makes the
+    parse fail ("XML or text declaration not at start of entity"). Keep the
+    <vbox> root as the very first thing in the file.
+
+    preferences.js builds the per-colour rows from
+    Zotero.AnnotationColourLabels.COLORS and wires the inputs to the stored
+    preferences.
+  -->
   <html:div style="padding: 1em; max-width: 40em;">
     <html:h2 style="margin-top: 0;">Annotation Colour Labels</html:h2>
     <html:p style="opacity: 0.8;">
