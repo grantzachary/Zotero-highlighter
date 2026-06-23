@@ -7,10 +7,10 @@ The names show when you hover a colour while annotating.
 It is **display-only**: it never changes your annotations, your library, or any
 stored data. It only relabels what you see.
 
-> **Status: working (v0.1.0).** Verified end-to-end on Zotero **9.0.4** —
-> the Settings pane lists all eight colours, custom names save, and they
-> appear as hover tooltips on the reader's colour swatches (relabelled live
-> via a MutationObserver, display-only). Confirm on 7/8 before a wide release.
+> **Status: early scaffold (v0.1.0).** The plugin structure, preferences pane,
+> and storage are in place. The one remaining piece — hooking the reader's
+> colour UI on Zotero 8/9 — is wired up and ready to be finalised. See
+> [`CLAUDE.md`](./CLAUDE.md) for the exact step to complete it.
 
 Why this exists: relabelling highlight colours has been one of the most-
 requested Zotero features for years, and the older community plugins broke when
@@ -41,7 +41,7 @@ No build step — this is a plain bootstrapped plugin.
 1. Find your Zotero *profile* directory (Help → Debug Output Logging → "Profile
    Directory" — or Tools → Developer).
 2. In `<profile>/extensions/`, create a text file named exactly after the
-   plugin id (see `manifest.json`): `annotation-colour-labels@grantzachary.github.io`.
+   plugin id (see `manifest.json`), e.g. `annotation-colour-labels@YOUR_DOMAIN`.
 3. Put **one line** in that file: the absolute path to this project folder
    (the folder containing `manifest.json`).
 4. In `<profile>/prefs.js`, delete the lines containing
@@ -59,23 +59,18 @@ e.g. `Zotero.AnnotationColourLabels.debugDumpReaderColorElements()`.
 The `.xpi` is just a zip of this folder with `manifest.json` at the root:
 
 ```bash
-# from the project root (the folder containing manifest.json)
-zip -r -FS ../annotation-colour-labels.xpi . \
-  -x '.git/*' '.github/*' 'CLAUDE.md' '*.zip' '.DS_Store'
+cd zotero-annotation-colour-labels
+zip -r -FS ../annotation-colour-labels.xpi . -x '.git/*' '.github/*' 'CLAUDE.md'
 ```
 
 ## Before you publish
 
-The `manifest.json` identifiers are filled in:
+Replace the placeholders in `manifest.json`:
 
-- author **Grant Freeman**
-- homepage / update_url under **github.com/grantzachary/Zotero-highlighter**
-- id **`annotation-colour-labels@grantzachary.github.io`** — this is permanent;
-  never change it once a release ships, or auto-updates break.
-
-For auto-updates, publish an `updates.json` at the `update_url` listing the
-version, the `update_link` to the released `.xpi`, and
-`applications.zotero.strict_min_version` (see `CLAUDE.md` → Package & release).
+- `YOUR NAME` → your name
+- `YOUR_USERNAME` → your GitHub username
+- `YOUR_DOMAIN` → any stable id suffix you control (e.g. your GitHub handle);
+  the id just has to be unique and never change once released.
 
 ## Licence
 
